@@ -66,8 +66,13 @@ MFRC522 mfrc522{driver}; // Create MFRC522 instance.
 
 /* MQTT application */
 // Connect to WiFi Router
-char ssid[] = "EIE568-R";   // WiFi network SSID (name) for EIE568 Lab
-char pass[] = "12345678";    // WiFi network password (use for WPA, or use as key for WEP)
+// char ssid[] = "EIE568-R";   // WiFi network SSID (name) for EIE568 Lab
+// char pass[] = "12345678";    // WiFi network password (use for WPA, or use as key for WEP)
+
+// OCH wifi
+char ssid[] = "TP-Link_098C";   // WiFi network SSID (name) for EIE568 Lab
+char pass[] = "69512964";    // WiFi network password (use for WPA, or use as key for WEP)
+
 //Create objects
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
@@ -121,17 +126,28 @@ void setup() {
   /*end of mqtt connect*/
 }
 
-void printUIDtoSerial() { 
+String printUIDtoSerial() {
+  String hexString = "";  
   Serial.print("CARD UID: \n");
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     Serial.print(mfrc522.uid.uidByte[i], HEX);
+    if (mfrc522.uid.uidByte[i] < 0x10) {
+      hexString += "0"; // 如果字节值小于16，前面补0
+    }
+    hexString += String(mfrc522.uid.uidByte[i], HEX);
   }
   Serial.print("\n");
+  return hexString;
 }
 
 void loop() {
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    printUIDtoSerial();
+    String UIDString = printUIDtoSerial();
+    // Publish message
+    Message = UIDString;
+    mqttClient.beginMessage(topic);
+    mqttClient.print(Message);
+    mqttClient.endMessage();
   }
   digitalWrite(LEDR, LOW);
   digitalWrite(LEDG, LOW);
@@ -140,8 +156,5 @@ void loop() {
   digitalWrite(LEDB, LOW);
   delay(100);
 
-  // Publish message
-  mqttClient.beginMessage(topic);
-  mqttClient.print(Message);
-  mqttClient.endMessage();
+
 }
