@@ -82,10 +82,20 @@ MqttClient mqttClient(wifiClient);
 const char server[] = "test.mosquitto.org";
 //Define the standard port for TCP/IP communication
 int port = 1883;
-//Define the "Topic"
-const char topic[]  = "EIE568S1/Light";
+//Define the "Topic", for pub
+const char pub_topic[]  = "PLUG/Msg";
 //Define the fixed message to be published 
-String Message = "52:Hello"; // todo: will be chaged to card UID
+String Message = "52:Hello"; //
+
+//Subscribe MQTT, for sub
+const char sub_topic[]  = "PLUG/Cmd";
+// set interval for polling server/server (milliseconds) for keep-alive
+const long poll_interval = 5000;  //set polling interval at 5 sec
+unsigned long previousMillis = 0; // time last time the loop is executed
+unsigned long currentMillis = 0;  // current time when the loop is executed
+
+
+
 
 
 // for led blink test
@@ -143,6 +153,30 @@ void setup() {
   Serial.println(server);
   Serial.println();
   /*end of mqtt connect*/
+
+
+  /*mqtt topic subscribe*/
+  mqttClient.onMessage(onMqttMessage);
+
+  Serial.print("Subscribing to topic: '");
+  Serial.print(sub_topic);
+  Serial.println("'");
+  Serial.println();
+
+  // subscribe to a topic
+  // the second parameter sets the QoS of the subscription,
+  // the the library supports subscribing at QoS 0, 1, or 2
+  int subscribeQos = 1;
+
+  mqttClient.subscribe(sub_topic,subscribeQos);
+
+  Serial.print("Waiting for messages on topic: '");
+  Serial.print(sub_topic);
+  Serial.println("' ...");
+  /*end of mqtt subscribe*/
+
+
+  /*start timer1*/
   timer1.start();
 }
 
@@ -166,11 +200,49 @@ void loop() {
 
     // Publish message
     Message = UIDString;
-    mqttClient.beginMessage(topic);
+    mqttClient.beginMessage(pub_topic);
     mqttClient.print(Message);
     mqttClient.endMessage();
     delay(100);
   }
 
   timer1.update();
+
+  // call poll() regularly to allow the library to receive MQTT messages and
+  // send MQTT keep alive which avoids being disconnected by the server
+  // todo:may be it is better to put this in a timer
+   mqttClient.poll();
 }
+
+void onMqttMessage(int messageSize) {
+// Process subscribed message as it arrives
+
+  String Topic_string = "";
+  String Message_string = "";
+  
+  Topic_string=mqttClient.messageTopic();
+  Serial.print("Received message on topic '");
+  Serial.print(Topic_string);
+  Serial.println("'");
+
+    // Gather the received message character by charater into a string
+  for (int i = 0; i < messageSize; i++) {
+    Message_string=Message_string+(char)mqttClient.read();
+  }
+
+  Serial.print("Received message is '");
+  Serial.print(Message_string);
+  Serial.println("'");
+  Serial.println();
+
+  // Using YES and NO for comand, to blink different led
+  if (Message_string == "YES") {
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else if (Message_string == "NO") {
+      digitalWrite(LED_BUILTIN, LOW);
+  }
+
+}
+
+
+
