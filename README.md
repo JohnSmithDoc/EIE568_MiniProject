@@ -1,4 +1,8 @@
 # EIE568 Mini Project
+based on: [GitHub - OSSLibraries/Arduino_MFRC522v2](https://github.com/OSSLibraries/Arduino_MFRC522v2/tree/master)
+
+
+
 Typical pin layout used:
 
 | Signal    | MFRC522 | Uno / 101   | Mega | Nano v3 | Leonardo / Micro | Pro Micro | Yun   |
