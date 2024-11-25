@@ -58,6 +58,8 @@ For my test result:
 //Include WiFi library
 #include <WiFiNINA.h>//we also need this header to access RGB LED
 
+#include <TickTwo.h>
+
 /*MFRC522 and SPI configuration*/
 MFRC522DriverPinSimple ss_pin(10); // Create pin driver. See typical pin layout above.
 SPIClass &spiClass = SPI; // Alternative SPI e.g. SPI2 or from library e.g. softwarespi.
@@ -85,6 +87,23 @@ const char topic[]  = "EIE568S1/Light";
 //Define the fixed message to be published 
 String Message = "52:Hello"; // todo: will be chaged to card UID
 
+
+// for led blink test
+void blink() {
+  static bool ledState = false;
+
+  digitalWrite(LEDR, LOW);
+  digitalWrite(LEDG, LOW);
+
+  // flip 
+  ledState = !ledState;
+  if (ledState) {
+    digitalWrite(LEDB, HIGH);
+  } else {
+    digitalWrite(LEDB, LOW);
+  }
+}
+TickTwo timer1(blink, 500); // change led every 500ms
 
 void setup() {
 
@@ -124,6 +143,7 @@ void setup() {
   Serial.println(server);
   Serial.println();
   /*end of mqtt connect*/
+  timer1.start();
 }
 
 String printUIDtoSerial() {
@@ -143,18 +163,14 @@ String printUIDtoSerial() {
 void loop() {
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
     String UIDString = printUIDtoSerial();
+
     // Publish message
     Message = UIDString;
     mqttClient.beginMessage(topic);
     mqttClient.print(Message);
     mqttClient.endMessage();
+    delay(100);
   }
-  digitalWrite(LEDR, LOW);
-  digitalWrite(LEDG, LOW);
-  digitalWrite(LEDB, HIGH);
-  delay(100);
-  digitalWrite(LEDB, LOW);
-  delay(100);
 
-
+  timer1.update();
 }
