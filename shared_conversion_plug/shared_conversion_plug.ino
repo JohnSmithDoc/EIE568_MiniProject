@@ -57,8 +57,16 @@ For my test result:
 #include <ArduinoMqttClient.h>
 //Include WiFi library
 #include <WiFiNINA.h>//we also need this header to access RGB LED
-
+//Timer for blinking led
 #include <TickTwo.h>
+
+//for rgb led control
+typedef enum {
+  RED   = 0,
+  GREEN = 1,
+  BLUE  = 2,
+} ledColor;
+ledColor rgbled{BLUE};
 
 /*MFRC522 and SPI configuration*/
 MFRC522DriverPinSimple ss_pin(10); // Create pin driver. See typical pin layout above.
@@ -95,25 +103,54 @@ unsigned long previousMillis = 0; // time last time the loop is executed
 unsigned long currentMillis = 0;  // current time when the loop is executed
 
 
-
-
-
 // for led blink test
 void blink() {
   static bool ledState = false;
-
-  digitalWrite(LEDR, LOW);
-  digitalWrite(LEDG, LOW);
-
   // flip 
   ledState = !ledState;
-  if (ledState) {
-    digitalWrite(LEDB, HIGH);
-  } else {
-    digitalWrite(LEDB, LOW);
+  switch(rgbled) {
+      case RED:
+        {
+          digitalWrite(LEDB, LOW);
+          digitalWrite(LEDG, LOW);
+          if (ledState) {
+            digitalWrite(LEDR, HIGH);
+          } else {
+            digitalWrite(LEDR, LOW);
+          }          
+        }
+        break;
+      case GREEN:
+        {
+          digitalWrite(LEDR, LOW);
+          digitalWrite(LEDB, LOW);
+          if (ledState) {
+            digitalWrite(LEDG, HIGH);
+          } else {
+            digitalWrite(LEDG, LOW);
+          }          
+        }
+        break;
+      case BLUE:
+        {
+          digitalWrite(LEDR, LOW);
+          digitalWrite(LEDG, LOW);
+          if (ledState) {
+            digitalWrite(LEDB, HIGH);
+          } else {
+            digitalWrite(LEDB, LOW);
+          }          
+        }
+        break;
+      default:
+        // disable all led
+        digitalWrite(LEDR, LOW);
+        digitalWrite(LEDG, LOW);
+        digitalWrite(LEDB, LOW);
   }
+
 }
-TickTwo timer1(blink, 500); // change led every 500ms
+TickTwo timer1(blink, 100); // change led every 100ms
 
 void setup() {
 
@@ -121,6 +158,8 @@ void setup() {
   pinMode(LEDR, OUTPUT);
   pinMode(LEDG, OUTPUT);
   pinMode(LEDB, OUTPUT);
+  //default to blink blue
+  rgbled = BLUE;
 
   Serial.begin(9600); // Initialize serial communications with the PC for debugging.
   while (!Serial);      // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
@@ -212,6 +251,7 @@ void loop() {
   // send MQTT keep alive which avoids being disconnected by the server
   // todo:may be it is better to put this in a timer
    mqttClient.poll();
+   delay(50);
 }
 
 void onMqttMessage(int messageSize) {
@@ -237,11 +277,15 @@ void onMqttMessage(int messageSize) {
 
   // Using YES and NO for comand, to blink different led
   if (Message_string == "YES") {
-    digitalWrite(LED_BUILTIN, HIGH);
+    // green led blinks
+    rgbled = GREEN;
   } else if (Message_string == "NO") {
-      digitalWrite(LED_BUILTIN, LOW);
+    // read led blinks
+    rgbled = RED;
+  } else {
+    // blue led blinks
+    rgbled = BLUE;
   }
-
 }
 
 
