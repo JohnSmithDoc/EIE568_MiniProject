@@ -34,6 +34,13 @@
  * Not found? For more see: https://github.com/OSSLibraries/Arduino_MFRC522v2#pin-layout
  */
 
+// we need to reserve others contribution!
+/*  Title: MQTT Publish
+    This sketch publishes a message onto an MQTT topic
+    Dr C.K. Leung (c) Oct 2024
+*/
+
+
 /* A struct used for passing the UID of a PICC.
 typedef struct {
   byte		size;			// Number of bytes in the UID. 4, 7 or 10.
