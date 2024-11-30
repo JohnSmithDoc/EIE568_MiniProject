@@ -1,9 +1,9 @@
 # EIE568 Mini Project
-based on: [GitHub - OSSLibraries/Arduino_MFRC522v2](https://github.com/OSSLibraries/Arduino_MFRC522v2/tree/master)
+Based on: [GitHub - OSSLibraries/Arduino_MFRC522v2](https://github.com/OSSLibraries/Arduino_MFRC522v2/tree/master)
 
+Board: Arduino Nano RP2040 Connect
 
-
-Typical pin layout used:
+Typical RFID-RC522 pin layout used:
 
 | Signal    | MFRC522 | Uno / 101   | Mega | Nano v3 | Leonardo / Micro | Pro Micro | Yun   |
 | --------- | ------- | ----------- | ---- | ------- | ---------------- | --------- | ----- |
@@ -13,8 +13,13 @@ Typical pin layout used:
 | SPI MISO  | MISO    | 12 / ICSP-1 | 50   | D12     | ICSP-1           | 14        | ICSP1 |
 | SPI SCK   | SCK     | 13 / ICSP-3 | 52   | D13     | ICSP-3           | 15        | ICSP3 |
 
+Relay pin: D3.  In this project, using LED to replace Relay for demonstration.
+
+Some useful information:
+
 ```
-/* A struct used for passing the UID of a PICC.
+/* 
+A struct used for passing the UID of a PICC.
 typedef struct {
   byte		size;			// Number of bytes in the UID. 4, 7 or 10.
   byte		uidByte[10];
@@ -25,9 +30,8 @@ typedef struct {
 
 ```
 /*
-For my test result:
-  the white card UID is: 7378AE2
-  the circle card UID is: 34E7213
+For my card test result:
+  the white card UID is: 73078AE2
 */
 ```
 
