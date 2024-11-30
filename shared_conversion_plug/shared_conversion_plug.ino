@@ -68,6 +68,9 @@ typedef enum {
 } ledColor;
 ledColor rgbled{BLUE};
 
+// for relay control
+#define PIN_RELAY     (3u)
+
 /*MFRC522 and SPI configuration*/
 MFRC522DriverPinSimple ss_pin(10); // Create pin driver. See typical pin layout above.
 SPIClass &spiClass = SPI; // Alternative SPI e.g. SPI2 or from library e.g. softwarespi.
@@ -76,12 +79,12 @@ MFRC522 mfrc522{driver}; // Create MFRC522 instance.
 
 /* MQTT application */
 // Connect to WiFi Router
-// char ssid[] = "EIE568-R";   // WiFi network SSID (name) for EIE568 Lab
-// char pass[] = "12345678";    // WiFi network password (use for WPA, or use as key for WEP)
+char ssid[] = "EIE568-R";   // WiFi network SSID (name) for EIE568 Lab
+char pass[] = "12345678";    // WiFi network password (use for WPA, or use as key for WEP)
 
 // OCH wifi
-char ssid[] = "TP-Link_098C";   // WiFi network SSID (name) for EIE568 Lab
-char pass[] = "69512964";    // WiFi network password (use for WPA, or use as key for WEP)
+// char ssid[] = "TP-Link_098C";   // WiFi network SSID (name) for EIE568 Lab
+// char pass[] = "69512964";    // WiFi network password (use for WPA, or use as key for WEP)
 
 //Create objects
 WiFiClient wifiClient;
@@ -161,6 +164,11 @@ void setup() {
   //default to blink blue
   rgbled = BLUE;
 
+  //relay pin, default is disconnect
+  pinMode(PIN_RELAY, OUTPUT);
+  digitalWrite(PIN_RELAY, LOW);
+
+
   Serial.begin(9600); // Initialize serial communications with the PC for debugging.
   while (!Serial);      // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
   mfrc522.PCD_Init();   // Init MFRC522 board.
@@ -223,12 +231,13 @@ String printUIDtoSerial() {
   String hexString = "";  
   Serial.print("CARD UID: \n");
   for (byte i = 0; i < mfrc522.uid.size; i++) {
-    Serial.print(mfrc522.uid.uidByte[i], HEX);
+    // Serial.print(mfrc522.uid.uidByte[i], HEX);
     if (mfrc522.uid.uidByte[i] < 0x10) {
       hexString += "0"; // 如果字节值小于16，前面补0
     }
     hexString += String(mfrc522.uid.uidByte[i], HEX);
   }
+  Serial.print(hexString);
   Serial.print("\n");
   return hexString;
 }
@@ -279,12 +288,18 @@ void onMqttMessage(int messageSize) {
   if (Message_string == "YES") {
     // green led blinks
     rgbled = GREEN;
+    // resume the circuit
+    digitalWrite(PIN_RELAY, HIGH);
   } else if (Message_string == "NO") {
     // read led blinks
     rgbled = RED;
+    // cut off the circuit
+    digitalWrite(PIN_RELAY, LOW);
   } else {
     // blue led blinks
     rgbled = BLUE;
+    // disconnect the circuit
+    digitalWrite(PIN_RELAY, LOW);
   }
 }
 
